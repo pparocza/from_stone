@@ -227,12 +227,16 @@ class RampingConvolver extends Piece{
         this.output = new MyGain( 1 );
         this.cG = new MyGain( 0 );
         this.tGMG = new MyGain( 1 );
+        this.tGRG = new MyGain( 0 );
 
 
         this.cG.connect( piece.reverbSend );
         this.cG.connect( piece.masterGain );
 
         this.tGMG.connect( piece.masterGain );
+
+        this.tGMG.connect( this.tGRG );
+        this.tGRG.connect( piece.reverbSend );
 
     }
 
@@ -461,6 +465,7 @@ class RampingConvolver extends Piece{
         this.noise.stopAtTime( stopTime );
 
         this.cG.gain.gain.setTargetAtTime( 4 , startTime + 20 , 30 );
+        this.tGRG.gain.gain.setTargetAtTime( 1 , startTime + 30 , 30 );
 
     }
 
