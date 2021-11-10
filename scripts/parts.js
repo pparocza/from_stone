@@ -268,13 +268,7 @@ class RampingConvolver extends Piece{
 
         this.cB.normalize( -1 , 1 );
 
-        // NOISE
-
-            this.noise = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
-            this.noise.noise().fill( 0 );
-            this.noise.playbackRate = 0.25;
-            this.noise.loop = true;
-            this.noise.output.gain.value = 0.1;
+        // IMPULSE
 
             this.nF = new MyBiquad( 'bandpass' , centerFrequency , Q );
 
@@ -460,9 +454,6 @@ class RampingConvolver extends Piece{
         }
 
         this.iB.start();
-
-        this.noise.startAtTime( startTime );
-        this.noise.stopAtTime( stopTime );
 
         this.cG.gain.gain.setTargetAtTime( 4 , startTime + 20 , 30 );
         this.tGRG.gain.gain.setTargetAtTime( 1 , startTime + 30 , 30 );
