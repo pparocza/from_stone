@@ -9,7 +9,7 @@ class Piece {
         this.globalNow = 0;
 
         this.gain = audioCtx.createGain();
-        this.gain.gain.value = 1;
+        this.gain.gain.value = 0.5;
 
         this.hp = new MyBiquad( 'highpass' , 10 , 1 );
     
@@ -57,7 +57,7 @@ class Piece {
         const iArray2 = [ 1 , M3 , P5 , 1/M2 , M6 ];
         this.globalRate = 0.25;
 
-        const iArray = iArray2;
+        const iArray = iArray1;
 
         this.rC1 = new RampingConvolver( this );
         this.rC2 = new RampingConvolver( this );
@@ -77,15 +77,15 @@ class Piece {
             // cFreq 
             1000 , 
             // bandwidth
-            1 , 
+            100 , 
             // Q
-            5 , 
+            1 , 
             // oscillationRate
             randomFloat( 0.2 , 0.4 ) , 
             // noiseRate
             0.25 , 
             // gain
-            4
+            1
         );
 
         this.rC3.load(
@@ -192,11 +192,11 @@ class Piece {
 
         this.phraseLength = 1 / Math.abs( this.globalRate );
 
-        this.rC1.start( this.globalNow + this.phraseLength * 0 , this.globalNow + this.phraseLength * 18 );
-        // this.rC3.start( this.globalNow + this.phraseLength * 0 , this.globalNow + this.phraseLength * 18 );
-        // this.rC5.start( this.globalNow + this.phraseLength * 0 , this.globalNow + this.phraseLength * 18 );
-        // this.rC2.start( this.globalNow + this.phraseLength * 0 , this.globalNow + this.phraseLength * 18 );
-        // this.rC4.start( this.globalNow + this.phraseLength * 0 , this.globalNow + this.phraseLength * 18 );
+        this.rC1.start( this.globalNow + this.phraseLength * 0 , this.globalNow + this.phraseLength * 40 );
+        this.rC3.start( this.globalNow + this.phraseLength * 2 , this.globalNow + this.phraseLength * 40 );
+        this.rC5.start( this.globalNow + this.phraseLength * 4 , this.globalNow + this.phraseLength * 40 );
+        this.rC2.start( this.globalNow + this.phraseLength * 6 , this.globalNow + this.phraseLength * 40 );
+        this.rC4.start( this.globalNow + this.phraseLength * 8 , this.globalNow + this.phraseLength * 40 );
     
     }
 
@@ -225,9 +225,14 @@ class RampingConvolver extends Piece{
         super();
 
         this.output = new MyGain( 1 );
+        this.cG = new MyGain( 0 );
+        this.tGMG = new MyGain( 1 );
 
-        this.output.connect( piece.masterGain );
-        this.output.connect( piece.reverbSend );
+
+        this.cG.connect( piece.reverbSend );
+        this.cG.connect( piece.masterGain );
+
+        this.tGMG.connect( piece.masterGain );
 
     }
 
@@ -288,7 +293,7 @@ class RampingConvolver extends Piece{
             this.tapBuffer = new MyBuffer2( 1 , this.iB.buffer.duration , audioCtx.sampleRate );
             this.tapAddBuffer = new MyBuffer2( 1 , this.iB.buffer.duration / 20 , audioCtx.sampleRate );
 
-            this.tapBuffer.playbackRate = randomFloat( 0.2 , 0.3 );
+            this.tapBuffer.playbackRate = randomFloat( 0.1 , 0.2 );
             this.tapBuffer.loop = true;
 
             this.p2 = 0;
@@ -385,10 +390,7 @@ class RampingConvolver extends Piece{
             this.tG.connect( this.nF );
             this.nF.connect( this.c );
 
-            this.tGG = new MyGain( 0.25 );
-
-            this.nF.connect( this.tGG );
-            this.tGG.connect( this.output );
+            this.tGG = new MyGain( 1 );
 
         // DELAY
 
@@ -406,11 +408,15 @@ class RampingConvolver extends Piece{
 
         // CONNECTIONS
 
-            this.c.connect( this.d );
+            this.cG.connect( this.d );
             this.d.connect( this.output );
 
-            this.c.connect( this.s );
+            this.c.connect( this.cG );
+            this.cG.connect( this.s );
             this.s.connect( this.output );
+
+            this.nF.connect( this.tGG );
+            this.tGG.connect( this.tGMG );
 
             this.c.output.gain.value = gainVal;
 
@@ -422,6 +428,9 @@ class RampingConvolver extends Piece{
         let startPoint = 0;
         let duration = 1 / this.oscillationRate;
         let divPosition = 0;
+        let tBStartPoint = 0;
+        let t2 = startTime;
+        let duration2 = 0;
 
         while( t < stopTime ){
 
@@ -429,9 +438,20 @@ class RampingConvolver extends Piece{
 
             startPoint = this.nO.buffer.duration * divPosition;
 
-            this.nO.startAtTime( t , startPoint ,  duration ); 
+            this.nO.startAtTime( t , startPoint ,  duration );
 
             t += duration;
+
+        }
+
+        while( t2 < stopTime ){
+
+            tBStartPoint = randomFloat( 0 , this.tapBuffer.buffer.duration );
+            duration2 = this.tapBuffer.buffer.duration - ( this.tapBuffer.buffer.duration * tBStartPoint );
+
+            this.tapBuffer.startAtTime( t2 , tBStartPoint , duration2 );
+
+            t2 += duration2;
 
         }
 
@@ -440,8 +460,7 @@ class RampingConvolver extends Piece{
         this.noise.startAtTime( startTime );
         this.noise.stopAtTime( stopTime );
 
-        this.tapBuffer.startAtTime( startTime );
-        this.tapBuffer.stopAtTime( stopTime );
+        this.cG.gain.gain.setTargetAtTime( 4 , startTime + 20 , 30 );
 
     }
 
