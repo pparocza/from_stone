@@ -62,7 +62,7 @@ class Piece {
         const iArray1 = [ 1 , M2 , P4 , P5 , M6 ];
         const iArray2 = [ 1 , M3 , P5 , 1/M2 , M6 ];
         this.globalRate = 0.25;
-        this.gainVal = 0.25;
+        this.gainVal = 1;
 
         const iArray = iArray1;
 
@@ -94,7 +94,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            1
+            this.gainVal * 1
         );
 
         this.rC3.load(
@@ -117,7 +117,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            4 
+            this.gainVal * 4
         );
 
         this.rC2.load( 
@@ -140,7 +140,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            4 
+            this.gainVal * 4 
         )
 
         this.rC4.load(
@@ -163,7 +163,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            4 
+            this.gainVal * 4 
         );
 
         this.rC5.load(
@@ -186,7 +186,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            4 
+            this.gainVal * 4 
         );
 
         this.rC1.output.connect( this.masterGain );
@@ -201,9 +201,9 @@ class Piece {
 
         this.rC1A.load( 
             // fund
-            fund * 2 , 
+            fund * 1 , 
             // bufferLength
-            0.25 , 
+            1 , 
             // intervalArray
             iArray , 
             // octaveArray
@@ -221,7 +221,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            this.gainVal * 3.5
+            this.gainVal * 8
         );
 
         this.rC1A.output.connect( this.masterGain );
@@ -238,7 +238,7 @@ class Piece {
         this.rC2.start( this.globalNow + this.phraseLength * 6 , this.globalNow + this.phraseLength * 40 );
         this.rC4.start( this.globalNow + this.phraseLength * 8 , this.globalNow + this.phraseLength * 40 );
 
-        // this.rC1A.start( this.globalNow + this.phraseLength * 8 , this.globalNow + this.phraseLength * 40 );
+        this.rC1A.start( this.globalNow + this.phraseLength * 6 , this.globalNow + this.phraseLength * 40 );
     
     }
 
@@ -364,7 +364,7 @@ class RampingConvolver extends Piece{
 
             for( let i = 0 ; i < this.nDivs ; i++ ){
                 
-                r = randomInt( 0 ,  4 );
+                r = randomInt( 0 ,  5 );
 
                 this.sB.constant( 0 ).fill( 0 );
 
