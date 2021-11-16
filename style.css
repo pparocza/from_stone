@@ -9,7 +9,7 @@ transform: translateX(-50%) translateY(-50%);
 h1{
     font: 28px Brush Script MT, sans-serif;
     text-align: center;
-    color: whitesmoke;
+    color: black;
 }
 a{
     font: 15px Trebuchet MS, sans-serif;
@@ -25,11 +25,11 @@ span{
     font: 17px Courier, sans-serif;
     color: whitesmoke;
 }
+body{
+    background-color: black;
+}
 div{
     font: 15px Trebuchet MS, sans-serif;
-}
-body{
-    background: black url();
 }
 p{
     text-align: center;

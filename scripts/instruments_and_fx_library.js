@@ -9168,10 +9168,9 @@ MyBuffer2.prototype = {
 
 	},
 	
-	bufferShape: function( inBuffer ){
+	bufferShape: function(inBuffer){
 
 		this.bufferShapeArray = inBuffer.getChannelData(0);
-		this.shape = inBuffer.getChannelData( 0 );
 
 		return this;
 

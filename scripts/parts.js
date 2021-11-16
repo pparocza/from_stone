@@ -9,7 +9,7 @@ class Piece {
         this.globalNow = 0;
 
         this.gain = audioCtx.createGain();
-        this.gain.gain.value = 0.5;
+        this.gain.gain.value = 1;
 
         this.hp = new MyBiquad( 'highpass' , 10 , 1 );
     
@@ -20,6 +20,12 @@ class Piece {
         this.hp.connect( this.gain );
         this.gain.connect( this.fadeFilter.input );
         this.fadeFilter.connect( audioCtx.destination );
+
+        this.globalNoise = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
+        this.globalNoise.noise().fill( 0 );
+        this.globalNoise.playbackRate = 0.25;
+        this.globalNoise.loop = true;
+        this.globalNoise.output.gain.value = 0.1;
 
     }
 
@@ -56,8 +62,11 @@ class Piece {
         const iArray1 = [ 1 , M2 , P4 , P5 , M6 ];
         const iArray2 = [ 1 , M3 , P5 , 1/M2 , M6 ];
         this.globalRate = 0.25;
+        this.gainVal = 0.25;
 
         const iArray = iArray1;
+
+        // RAMPING CONVOLVER 1
 
         this.rC1 = new RampingConvolver( this );
         this.rC2 = new RampingConvolver( this );
@@ -85,7 +94,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            1
+            this.gainVal * 1
         );
 
         this.rC3.load(
@@ -108,7 +117,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            4 
+            this.gainVal * 1
         );
 
         this.rC2.load( 
@@ -131,7 +140,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            4 
+            this.gainVal * 1 
         )
 
         this.rC4.load(
@@ -154,7 +163,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            4 
+            this.gainVal * 1 
         );
 
         this.rC5.load(
@@ -177,7 +186,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            4 
+            this.gainVal * 1
         );
 
         this.rC1.output.connect( this.masterGain );
@@ -185,6 +194,37 @@ class Piece {
         this.rC3.output.connect( this.masterGain );
         this.rC4.output.connect( this.masterGain );
         this.rC5.output.connect( this.masterGain );
+
+        // RAMPING CONVOLVER 2
+
+        this.rC1A = new RampingConvolver2( this );
+
+        this.rC1A.load( 
+            // fund
+            fund * 2 , 
+            // bufferLength
+            0.25 , 
+            // intervalArray
+            iArray , 
+            // octaveArray
+            [ 1 , 0.5 , 2 , 0.25 , 4 ] ,
+            // cFreq 
+            12000 , 
+            // bandwidth
+            11700 , 
+            // Q
+            5 , 
+            // fmCFreq , fmMFreq
+            randomInt( 1 , 10 ) , randomInt( 1 , 10 ) ,  
+            // oscillationRate
+            this.globalRate * 0.25 , 
+            // noiseRate
+            0.25 , 
+            // gain
+            this.gainVal * 3.5
+        );
+
+        this.rC1A.output.connect( this.masterGain );
 
     }
 
@@ -197,6 +237,8 @@ class Piece {
         this.rC5.start( this.globalNow + this.phraseLength * 4 , this.globalNow + this.phraseLength * 40 );
         this.rC2.start( this.globalNow + this.phraseLength * 6 , this.globalNow + this.phraseLength * 40 );
         this.rC4.start( this.globalNow + this.phraseLength * 8 , this.globalNow + this.phraseLength * 40 );
+
+        // this.rC1A.start( this.globalNow + this.phraseLength * 8 , this.globalNow + this.phraseLength * 40 );
     
     }
 
@@ -204,6 +246,8 @@ class Piece {
 
         this.fadeFilter.start(1, 50);
 		this.globalNow = audioCtx.currentTime;
+
+        this.globalNoise.start();
 
         this.startRampingConvolvers();
 
@@ -305,8 +349,12 @@ class RampingConvolver extends Piece{
 
             }
 
+            let printArray = new Float32Array( audioCtx.sampleRate );
+            this.tapBuffer.buffer.copyFromChannel( printArray , 0 );
+
             console.log( 'tap buffer: ' );
             bufferGraph( this.tapBuffer.buffer );
+            console.log( printArray );
 
             let r = 0;
             let rP = 0;
@@ -351,20 +399,6 @@ class RampingConvolver extends Piece{
 
             this.iB.bufferShape( this.nO.buffer ).multiply( 0 );
 
-            this.dLO = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
-            this.dLO.unipolarNoise().fill( 0 );
-            this.dLO.constant( 0.125 * 0.125 ).multiply( 0 );
-            this.dLO.playbackRate = 0.0000125;
-            this.dLO.loop = true;
-            this.dLO.start();
-
-            this.dRO = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
-            this.dRO.unipolarNoise().fill( 0 );
-            this.dRO.constant( 0.125 * 0.2 ).multiply( 0 );
-            this.dRO.playbackRate = 0.00003;
-            this.dRO.loop = true;
-            this.dRO.start();
-
             this.c.setBuffer( this.cB.buffer );
 
             console.log( 'impulse buffer: ' );
@@ -388,9 +422,23 @@ class RampingConvolver extends Piece{
             this.tG.connect( this.nF );
             this.nF.connect( this.c );
 
-            this.tGG = new MyGain( 1 );
+            this.tGG = new MyGain( 0.1 );
 
         // DELAY
+
+            this.dLO = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
+            this.dLO.unipolarNoise().fill( 0 );
+            this.dLO.constant( 0.125 * 0.125 ).multiply( 0 );
+            this.dLO.playbackRate = 0.0000125;
+            this.dLO.loop = true;
+            this.dLO.start();
+
+            this.dRO = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
+            this.dRO.unipolarNoise().fill( 0 );
+            this.dRO.constant( 0.125 * 0.2 ).multiply( 0 );
+            this.dRO.playbackRate = 0.00003;
+            this.dRO.loop = true;
+            this.dRO.start();
 
             this.d = new Effect();
             this.d.randomEcho();
@@ -457,6 +505,178 @@ class RampingConvolver extends Piece{
 
         this.cG.gain.gain.setTargetAtTime( 4 , startTime + 20 , 30 );
         this.tGRG.gain.gain.setTargetAtTime( 1 , startTime + 30 , 30 );
+
+    }
+
+}
+
+class RampingConvolver2 extends Piece{
+
+    constructor( piece ){
+
+        super();
+
+        this.output = new MyGain( 1 );
+
+        this.output.connect( piece.masterGain );
+        this.output.connect( piece.reverbSend );
+
+    }
+
+    load( fund , bufferLength , iArray , oArray , centerFrequency , bandwidth , Q , fmCFreq , fmMFreq , oscillationRate , noiseRate , gainVal ){
+
+        this.c = new MyConvolver();
+        this.cB = new MyBuffer2(  1 , bufferLength , audioCtx.sampleRate );
+        this.cAB = new MyBuffer2( 1 , bufferLength , audioCtx.sampleRate );
+
+        this.oscillationRate = oscillationRate;
+
+        let interval = 0;
+        let o = 0;
+        let p = 0;
+
+        for( let i = 0 ; i < 20 ; i++ ){
+
+            interval = randomArrayValue( iArray );
+            o = randomArrayValue( oArray );
+            p = randomFloat( 0.1 , 0.9 );
+
+            this.cAB.fm( fund * interval * o , fund * interval * o , randomFloat( 0.25 , 0.5 ) ).add( 0 );
+            this.cAB.constant( 1 / o ).multiply( 0 );
+            this.cAB.ramp( p , p + 0.1 , 0.5 , 0.5 , 0.1 , 0.1 ).multiply( 0 );
+
+            this.cB.addBuffer( this.cAB.buffer );
+
+        }
+
+        this.cB.normalize( -1 , 1 );
+
+        bufferGraph( this.cB.buffer );
+
+        this.c.setBuffer( this.cB.buffer );
+
+        // NOISE
+
+            this.globalNoiseGain = new MyGain( 0 );
+
+            this.nF = new MyBiquad( 'bandpass' , centerFrequency , Q );
+
+            this.nDivs = randomInt( 5 , 15 );
+            this.tBDivs = randomInt( 10 , 20 );
+
+            this.nO = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
+            this.nO.playbackRate = ( this.nO.buffer.duration * this.oscillationRate ) / this.nDivs ;
+
+            this.sB = new MyBuffer2( 1 , this.nO.buffer.duration / this.nDivs , audioCtx.sampleRate );
+            this.tB = new MyBuffer2( 1 , this.sB.buffer.duration / this.tBDivs , audioCtx.sampleRate );
+
+            let r = 0;
+            let rP = 0;
+            let rA = 0;
+            let rOD = 0;
+            let rO = 0;
+
+            for( let i = 0 ; i < this.nDivs ; i++ ){
+                
+                r = randomInt( 0 ,  5 );
+
+                this.sB.constant( 0 ).fill( 0 );
+
+                if( r === 0 ){
+                    this.sB.sine( randomInt( 1 , 5 ) , 1 ).fill( 0 );
+                }
+
+                if( r === 1 ){
+                    this.sB.fm( randomFloat( 0.5 , 5 ) , randomFloat( 0.5 , 5 ) , randomFloat( 0.25 , 2 ) ).fill( 0 );
+                }
+
+                if( r === 2 ){
+                    this.sB.am( randomFloat( 0.5 , 5 ) , randomFloat( 0.5 , 5 ) , 1 ).fill( 0 );
+                }
+
+                if( r === 3 ){
+                    rP = randomFloat( 0 , 1 );
+                    this.sB.ramp( 0 , 1 , rP , rP , randomFloat( 1 , 2 ) , randomFloat( 1 , 2 ) ).fill( 0 );
+                    this.sB.constant( randomArrayValue( [ -1 , 1 ] ) ).multiply( 0 );
+                }
+
+                if( r === 4){
+                    for( let j = 0 ; j < this.tBDivs ; j++ ){
+                        this.tB.constant( randomFloat( -1 , 1 ) ).fill( 0 );
+                        this.sB.bufferShape( this.tB.buffer ).insert( 0 , j / this.tBDivs , ( j + 1 ) / this.tBDivs );
+                    }
+                }
+
+                this.nO.bufferShape( this.sB.buffer ).insert( 0 , ( i / this.nDivs ) , ( ( i + 1 ) / this.nDivs) );
+
+            }
+
+            bufferGraph( this.nO.buffer );
+
+            this.nOG = new MyGain( bandwidth );
+
+            this.nO.connect( this.nOG );
+
+            this.nOG.connect( this.nF.biquad.frequency );
+            piece.globalNoise.connect( this.globalNoiseGain );
+            this.globalNoiseGain.connect( this.nF );
+            this.nF.connect( this.c );
+
+        // DELAY
+
+            this.dLO = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
+            this.dLO.unipolarNoise().fill( 0 );
+            this.dLO.constant( 0.125 * 0.125 ).multiply( 0 );
+            this.dLO.playbackRate = 0.0000125;
+            this.dLO.loop = true;
+            this.dLO.start();
+
+            this.dRO = new MyBuffer2( 1 , 1 , audioCtx.sampleRate );
+            this.dRO.unipolarNoise().fill( 0 );
+            this.dRO.constant( 0.125 * 0.2 ).multiply( 0 );
+            this.dRO.playbackRate = 0.00003;
+            this.dRO.loop = true;
+            this.dRO.start();
+
+            this.d = new Effect();
+            this.d.randomEcho();
+            this.d.on();
+
+            this.dLO.connect( this.d.dly.delayL.delayTime );
+            this.dRO.connect( this.d.dly.delayR.delayTime );
+
+        // CONNECTIONS
+
+            this.c.connect( this.d );
+
+            this.c.connect( this.output );
+            this.d.connect( this.output );
+
+            this.c.output.gain.value = gainVal;
+
+    }
+
+    start( startTime , stopTime ){
+
+        let t = startTime;
+        let startPoint = 0;
+        let duration = 1 / this.oscillationRate;
+        let divPosition = 0;
+
+        while( t < stopTime ){
+
+            divPosition = ( randomInt( 0 , this.nDivs ) / this.nDivs );
+
+            startPoint = this.nO.buffer.duration * divPosition /*+ randomFloat( 0 , 0.9 )*/;
+
+            this.nO.startAtTime( t , startPoint ,  duration ); 
+
+            t += duration;
+
+        }
+
+        this.globalNoiseGain.gain.gain.setTargetAtTime( 1 , startTime , 0.01 );
+        this.globalNoiseGain.gain.gain.setTargetAtTime( 0 , stopTime , 0.01 );
 
     }
 
