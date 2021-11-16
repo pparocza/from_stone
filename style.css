@@ -27,6 +27,7 @@ span{
 }
 body{
     background-color: black;
+    overflow: hidden;
 }
 div{
     font: 15px Trebuchet MS, sans-serif;
