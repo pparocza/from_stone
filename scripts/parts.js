@@ -61,8 +61,8 @@ class Piece {
         const fund = 1 * randomFloat( 225 , 325 ); // 300
         const iArray1 = [ 1 , M2 , P4 , P5 , M6 ];
         const iArray2 = [ 1 , M3 , P5 , 1/M2 , M6 ];
-        this.globalRate = 0.25;
         this.gainVal = 1;
+        this.globalRate = 0.25;
 
         const iArray = iArray1;
 
@@ -120,6 +120,29 @@ class Piece {
             this.gainVal * 4
         );
 
+        this.rC5.load(
+            // fund
+            fund * 2 , 
+            // bufferLength
+            1, 
+            // intervalArray
+            iArray , 
+            // octaveArray
+            [ 1 , 0.5 , 2 , 0.25 , 4 ] ,
+            // cFreq 
+            12000 , 
+            // bandwidth
+            11700 , 
+            // Q
+            5 ,   
+            // oscillationRate
+            randomFloat( 0.2 , 0.4 ) ,  
+            // noiseRate
+            0.25 , 
+            // gain
+            this.gainVal * 4 
+        );
+
         this.rC2.load( 
             // fund
             fund , 
@@ -166,29 +189,6 @@ class Piece {
             this.gainVal * 4 
         );
 
-        this.rC5.load(
-            // fund
-            fund * 2 , 
-            // bufferLength
-            1, 
-            // intervalArray
-            iArray , 
-            // octaveArray
-            [ 1 , 0.5 , 2 , 0.25 , 4 ] ,
-            // cFreq 
-            12000 , 
-            // bandwidth
-            11700 , 
-            // Q
-            5 ,   
-            // oscillationRate
-            randomFloat( 0.2 , 0.4 ) ,  
-            // noiseRate
-            0.25 , 
-            // gain
-            this.gainVal * 4 
-        );
-
         this.rC1.output.connect( this.masterGain );
         this.rC2.output.connect( this.masterGain );
         this.rC3.output.connect( this.masterGain );
@@ -217,7 +217,7 @@ class Piece {
             // fmCFreq , fmMFreq
             randomInt( 1 , 10 ) , randomInt( 1 , 10 ) ,  
             // oscillationRate
-            this.globalRate * 0.25 , 
+            0.0625 , 
             // noiseRate
             0.25 , 
             // gain
@@ -231,14 +231,23 @@ class Piece {
     startRampingConvolvers(){
 
         this.phraseLength = 1 / Math.abs( this.globalRate );
+        this.end = this.globalNow + this.phraseLength * 4; // 40
 
-        this.rC1.start( this.globalNow + this.phraseLength * 0 , this.globalNow + this.phraseLength * 40 );
-        this.rC3.start( this.globalNow + this.phraseLength * 2 , this.globalNow + this.phraseLength * 40 );
-        this.rC5.start( this.globalNow + this.phraseLength * 4 , this.globalNow + this.phraseLength * 40 );
-        this.rC2.start( this.globalNow + this.phraseLength * 6 , this.globalNow + this.phraseLength * 40 );
-        this.rC4.start( this.globalNow + this.phraseLength * 8 , this.globalNow + this.phraseLength * 40 );
+        // this.globalNow + this.phraseLength * 0
+        // this.globalNow + this.phraseLength * 2
+        // this.globalNow + this.phraseLength * 4
+        // this.globalNow + this.phraseLength * 6
+        // this.globalNow + this.phraseLength * 8
 
-        this.rC1A.start( this.globalNow + this.phraseLength * 6 , this.globalNow + this.phraseLength * 40 );
+        // RESTORE CONVOLVER AND REVERB FADES IN START AS WELL (or just add to start arguments)
+
+        // this.rC1.start( this.globalNow + this.phraseLength * 0 , this.end );
+        this.rC3.start( this.globalNow + this.phraseLength * 0 , this.end );
+        // this.rC5.start( this.globalNow + this.phraseLength * 0 , this.end );
+        // this.rC2.start( this.globalNow + this.phraseLength * 6 , this.end );
+        // this.rC4.start( this.globalNow + this.phraseLength * 8 , this.end );
+
+        // this.rC1A.start( this.globalNow + this.phraseLength * 6 , this.globalNow + this.phraseLength * 40 );
     
     }
 
@@ -349,12 +358,8 @@ class RampingConvolver extends Piece{
 
             }
 
-            let printArray = new Float32Array( audioCtx.sampleRate );
-            this.tapBuffer.buffer.copyFromChannel( printArray , 0 );
-
             console.log( 'tap buffer: ' );
             bufferGraph( this.tapBuffer.buffer );
-            console.log( printArray );
 
             let r = 0;
             let rP = 0;
@@ -503,8 +508,10 @@ class RampingConvolver extends Piece{
 
         this.iB.start();
 
-        this.cG.gain.gain.setTargetAtTime( 4 , startTime + 20 , 30 );
-        this.tGRG.gain.gain.setTargetAtTime( 1 , startTime + 30 , 30 );
+        // CG start - 20
+        // TG start - 30
+        this.cG.gain.gain.setTargetAtTime( 4 , startTime + 0 , 30 );
+        this.tGRG.gain.gain.setTargetAtTime( 1 , startTime + 0 , 30 );
 
     }
 
