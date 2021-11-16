@@ -94,7 +94,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            this.gainVal * 1
+            1
         );
 
         this.rC3.load(
@@ -117,7 +117,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            this.gainVal * 1
+            4 
         );
 
         this.rC2.load( 
@@ -140,7 +140,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            this.gainVal * 1 
+            4 
         )
 
         this.rC4.load(
@@ -163,7 +163,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            this.gainVal * 1 
+            4 
         );
 
         this.rC5.load(
@@ -186,7 +186,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            this.gainVal * 1
+            4 
         );
 
         this.rC1.output.connect( this.masterGain );
