@@ -73,6 +73,7 @@ class Piece {
         this.rC3 = new RampingConvolver( this );
         this.rC4 = new RampingConvolver( this );
         this.rC5 = new RampingConvolver( this );
+        this.rC5B = new RampingConvolver( this );
 
         this.rC1.load( 
             // fund
@@ -122,13 +123,13 @@ class Piece {
 
         this.rC5.load(
             // fund
-            fund * 2 , 
+            fund * 2 ,  
             // bufferLength
             1, 
             // intervalArray
             iArray , 
             // octaveArray
-            [ 1 , 0.5 , 2 , 0.25 , 4 ] ,
+            [ 1 , 2 , 4 ] ,
             // cFreq 
             12000 , 
             // bandwidth
@@ -140,7 +141,30 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            this.gainVal * 4 
+            this.gainVal * 1 
+        );
+
+        this.rC5B.load(
+            // fund
+            fund * 2 , 
+            // bufferLength
+            1, 
+            // intervalArray
+            iArray , 
+            // octaveArray
+            [ 0.25 , 0.5 ] ,
+            // cFreq 
+            12000 , 
+            // bandwidth
+            11700 , 
+            // Q
+            5 ,   
+            // oscillationRate
+            randomFloat( 0.2 , 0.4 ) ,  
+            // noiseRate
+            0.25 , 
+            // gain
+            this.gainVal * 2
         );
 
         this.rC2.load( 
@@ -194,6 +218,7 @@ class Piece {
         this.rC3.output.connect( this.masterGain );
         this.rC4.output.connect( this.masterGain );
         this.rC5.output.connect( this.masterGain );
+        this.rC5B.output.connect( this.masterGain );
 
         // RAMPING CONVOLVER 2
 
@@ -231,7 +256,7 @@ class Piece {
     startRampingConvolvers(){
 
         this.phraseLength = 1 / Math.abs( this.globalRate );
-        this.end = this.globalNow + this.phraseLength * 4; // 40
+        this.end = this.globalNow + this.phraseLength * 8; // 40
 
         // this.globalNow + this.phraseLength * 0
         // this.globalNow + this.phraseLength * 2
@@ -241,9 +266,10 @@ class Piece {
 
         // RESTORE CONVOLVER AND REVERB FADES IN START AS WELL (or just add to start arguments)
 
-        // this.rC1.start( this.globalNow + this.phraseLength * 0 , this.end );
+        this.rC1.start( this.globalNow + this.phraseLength * 0 , this.end );
         this.rC3.start( this.globalNow + this.phraseLength * 0 , this.end );
-        // this.rC5.start( this.globalNow + this.phraseLength * 0 , this.end );
+        this.rC5.start( this.globalNow + this.phraseLength * 0 , this.end );
+        this.rC5B.start( this.globalNow + this.phraseLength * 0 , this.end );
         // this.rC2.start( this.globalNow + this.phraseLength * 6 , this.end );
         // this.rC4.start( this.globalNow + this.phraseLength * 8 , this.end );
 
