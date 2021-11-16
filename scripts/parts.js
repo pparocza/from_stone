@@ -9,7 +9,7 @@ class Piece {
         this.globalNow = 0;
 
         this.gain = audioCtx.createGain();
-        this.gain.gain.value = 0.5;
+        this.gain.gain.value = 0.3;
 
         this.hp = new MyBiquad( 'highpass' , 10 , 1 );
     
@@ -72,6 +72,7 @@ class Piece {
         this.rC2 = new RampingConvolver( this );
         this.rC3 = new RampingConvolver( this );
         this.rC4 = new RampingConvolver( this );
+        this.rC4B = new RampingConvolver( this );
         this.rC5 = new RampingConvolver( this );
         this.rC5B = new RampingConvolver( this );
 
@@ -129,7 +130,7 @@ class Piece {
             // intervalArray
             iArray , 
             // octaveArray
-            [ 1 , 2 , 4 ] ,
+            [ 1 , 2 , 4 , 0.25 , 0.5 ] ,
             // cFreq 
             12000 , 
             // bandwidth
@@ -141,7 +142,7 @@ class Piece {
             // noiseRate
             0.25 , 
             // gain
-            this.gainVal * 1 
+            this.gainVal * 4 
         );
 
         this.rC5B.load(
@@ -175,7 +176,7 @@ class Piece {
             // intervalArray
             iArray , 
             // octaveArray
-            [ 1 , 0.5 , 2 , 0.25 , 4 ] ,
+            [ 1 , 0.5 , 2 , 0.25 ] ,
             // cFreq 
             12000 , 
             // bandwidth
@@ -198,7 +199,7 @@ class Piece {
             // intervalArray
             iArray , 
             // octaveArray
-            [ 1 , 0.5 , 2 , 0.25 , 4 ] ,
+            [ 1 , 2 , 4 , 0.25 , 0.5 ] , // [ 1 , 0.5 , 2 , 0.25 , 4 ]
             // cFreq 
             12000 , 
             // bandwidth
@@ -213,10 +214,34 @@ class Piece {
             this.gainVal * 4 
         );
 
+        this.rC4B.load(
+            // fund
+            fund , 
+            // bufferLength
+            2 , 
+            // intervalArray
+            iArray , 
+            // octaveArray
+            [ 0.25 , 0.5 ] ,
+            // cFreq 
+            12000 , 
+            // bandwidth
+            11700 , 
+            // Q
+            5 , 
+            // oscillationRate
+            randomFloat( 0.2 , 0.4 ) * 0.5 , 
+            // noiseRate
+            0.25 , 
+            // gain
+            this.gainVal * 2
+        );
+
         this.rC1.output.connect( this.masterGain );
         this.rC2.output.connect( this.masterGain );
         this.rC3.output.connect( this.masterGain );
         this.rC4.output.connect( this.masterGain );
+        this.rC4B.output.connect( this.masterGain );
         this.rC5.output.connect( this.masterGain );
         this.rC5B.output.connect( this.masterGain );
 
@@ -242,7 +267,7 @@ class Piece {
             // fmCFreq , fmMFreq
             randomInt( 1 , 10 ) , randomInt( 1 , 10 ) ,  
             // oscillationRate
-            0.0625 , 
+            0.5 , 
             // noiseRate
             0.25 , 
             // gain
@@ -256,24 +281,17 @@ class Piece {
     startRampingConvolvers(){
 
         this.phraseLength = 1 / Math.abs( this.globalRate );
-        this.end = this.globalNow + this.phraseLength * 8; // 40
-
-        // this.globalNow + this.phraseLength * 0
-        // this.globalNow + this.phraseLength * 2
-        // this.globalNow + this.phraseLength * 4
-        // this.globalNow + this.phraseLength * 6
-        // this.globalNow + this.phraseLength * 8
-
-        // RESTORE CONVOLVER AND REVERB FADES IN START AS WELL (or just add to start arguments)
-
+        this.end = this.globalNow + this.phraseLength * 40; // 40
+        
         this.rC1.start( this.globalNow + this.phraseLength * 0 , this.end );
-        this.rC3.start( this.globalNow + this.phraseLength * 0 , this.end );
-        this.rC5.start( this.globalNow + this.phraseLength * 0 , this.end );
-        this.rC5B.start( this.globalNow + this.phraseLength * 0 , this.end );
-        // this.rC2.start( this.globalNow + this.phraseLength * 6 , this.end );
-        // this.rC4.start( this.globalNow + this.phraseLength * 8 , this.end );
-
-        // this.rC1A.start( this.globalNow + this.phraseLength * 6 , this.globalNow + this.phraseLength * 40 );
+        this.rC3.start( this.globalNow + this.phraseLength * 2 , this.end );
+        this.rC5.start( this.globalNow + this.phraseLength * 4 , this.end );
+        // this.rC5B.start( this.globalNow + this.phraseLength * 4 , this.end );
+        this.rC2.start( this.globalNow + this.phraseLength * 6 , this.end );
+        this.rC4.start( this.globalNow + this.phraseLength * 8 , this.end );
+        // this.rC4B.start( this.globalNow + this.phraseLength * 8 , this.end );
+        
+        // this.rC1A.start( this.globalNow + this.phraseLength * 0 , this.end );
     
     }
 
@@ -534,10 +552,8 @@ class RampingConvolver extends Piece{
 
         this.iB.start();
 
-        // CG start - 20
-        // TG start - 30
-        this.cG.gain.gain.setTargetAtTime( 4 , startTime + 0 , 30 );
-        this.tGRG.gain.gain.setTargetAtTime( 1 , startTime + 0 , 30 );
+        this.cG.gain.gain.setTargetAtTime( 4 , startTime + 20 , 30 );
+        this.tGRG.gain.gain.setTargetAtTime( 1 , startTime + 30 , 30 );
 
     }
 
