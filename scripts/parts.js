@@ -9,7 +9,7 @@ class Piece {
         this.globalNow = 0;
 
         this.gain = audioCtx.createGain();
-        this.gain.gain.value = 1;
+        this.gain.gain.value = 0.5;
 
         this.hp = new MyBiquad( 'highpass' , 10 , 1 );
     
