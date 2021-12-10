@@ -5,7 +5,7 @@ function setup() {
   }
 
   function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
+    resizeCanvas(windowHeight, windowHeight);
   }
   
   function draw() {
@@ -14,7 +14,7 @@ function setup() {
     to = color(random( 0 , 255 ), random( 0 , 255 ), random( 0 , 255 ), 255);
     c1 = lerpColor(from, to, 0.33);
     c2 = lerpColor(from, to, 0.66);
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < random( 1 , 3 ); i++) {
       fill(from);
       quad(
         random(0, windowWidth), random(windowHeight),
